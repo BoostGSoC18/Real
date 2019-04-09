@@ -162,7 +162,7 @@ TEST_CASE("Operator ==") {
 
         SECTION("With precision exception") {
             SECTION("Explicit == Algorithm") {
-                boost::real::real a("1.111");
+                boost::real::real a("1.111"); // Works only for more than 2 ones after decimal. Need to debug.
                 boost::real::real b(one_one_one, 1);
 
                 CHECK_FALSE(a == b);
