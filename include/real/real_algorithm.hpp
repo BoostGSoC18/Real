@@ -204,7 +204,9 @@ namespace boost {
              * @param exponent - an integer representing the number exponent.
              */
             explicit real_algorithm(int (*get_nth_digit)(unsigned int), int exponent)
-                    : _get_nth_digit(get_nth_digit), _exponent(exponent), _positive(true) {}
+                    : _get_nth_digit(get_nth_digit), _exponent(exponent), _positive(true) {
+                        set_maximum_precision(15);
+                    }
 
             /**
              * @brief *Lambda function constructor with exponent and sign:* Creates a boost::real::real_algorithm instance
@@ -224,7 +226,9 @@ namespace boost {
                                     bool positive)
                     : _get_nth_digit(get_nth_digit),
                       _exponent(exponent),
-                      _positive(positive) {}
+                      _positive(positive) {
+                          set_maximum_precision(15);
+                      }
 
             /**
              * @brief Returns the maximum allowed precision, if that precision is reached and an
@@ -233,7 +237,7 @@ namespace boost {
              * @return an integer with the maximum allowed precision.
              */
             unsigned int max_precision() const {
-                return boost::real::real_algorithm::maximum_precision;
+                return this->_maximum_precision;
             }
 
             /**
@@ -281,7 +285,7 @@ namespace boost {
              */
             const_precision_iterator cend() const {
                 const_precision_iterator it(this);
-                it.iterate_n_times(boost::real::real_algorithm::maximum_precision - 1);
+                it.iterate_n_times(this->max_precision() - 1);
                 return it;
             }
 

@@ -149,7 +149,7 @@ TEST_CASE("Iterator cend") {
 
     SECTION("Iterate until the maximum set precision returns the end of the iterator") {
 
-        for(int i = 0; i < 9; i++) {
+        for(int i = 0; i < 14; i++) {
             CHECK_FALSE( approximation_it == end_it );
             ++approximation_it;
         }

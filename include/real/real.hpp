@@ -442,6 +442,7 @@ namespace boost {
                     _kind(other._kind),
                     _explicit_number(other._explicit_number),
                     _algorithmic_number(other._algorithmic_number),
+                    _maximum_precision(other.max_precision()),
                     _operation(other._operation) { this->copy_operands(other); };
 
             /**
@@ -555,12 +556,21 @@ namespace boost {
              *
              * @return and integer with the maximum allowed precision.
              */
+            
             unsigned int max_precision() const {
-                if (this->_maximum_precision == 0) {
-                    return boost::real::real::maximum_precision;
-                }
 
-                return this->_maximum_precision;
+                switch (this->_kind) {
+
+                    case KIND::EXPLICIT:
+                        return _explicit_number.max_precision();
+
+
+                    case KIND::ALGORITHM:
+                        return _algorithmic_number.max_precision();
+
+                    case KIND::OPERATION:
+                        return this->_maximum_precision;
+                }
             }
 
             /**
@@ -573,6 +583,8 @@ namespace boost {
              */
             void set_maximum_precision(unsigned int maximum_precision) {
                 this->_maximum_precision = maximum_precision;
+                this->_algorithmic_number.set_maximum_precision(maximum_precision);
+                this->_explicit_number.set_maximum_precision(maximum_precision);
             }
 
             /**
@@ -644,6 +656,7 @@ namespace boost {
                 this->_rhs_ptr = new real(other);
                 this->_kind = KIND::OPERATION;
                 this->_operation = OPERATION::ADDITION;
+                this->set_maximum_precision(std::max(this->max_precision(), other.max_precision()));
                 return *this;
             }
 
@@ -674,6 +687,7 @@ namespace boost {
                 this->_rhs_ptr = new real(other);
                 this->_kind = KIND::OPERATION;
                 this->_operation = OPERATION::SUBTRACT;
+                this->set_maximum_precision(std::max(this->max_precision(), other.max_precision()));
                 return *this;
             }
 
@@ -704,6 +718,7 @@ namespace boost {
                 this->_rhs_ptr = new real(other);
                 this->_kind = KIND::OPERATION;
                 this->_operation = OPERATION::MULTIPLICATION;
+                this->set_maximum_precision(std::max(this->max_precision(), other.max_precision()));
                 return *this;
             }
 
