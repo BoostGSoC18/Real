@@ -24,7 +24,7 @@ matrix:
           - wget --quiet -O - ${BOOST_URL} | tar --strip-components=1 -xz -C /tmp/boost  || exit 1
           - cd /tmp/boost/tools/build && ./bootstrap.sh && ./b2 install --prefix=/tmp/b2
           - export PATH=/tmp/b2/bin:${PATH}
-          - cd /tmp/boost && b2 toolset=gcc cxxflags="-std=c++14 ${CXXFLAGS}"
+          - cd /tmp/boost && b2 toolset=gcc cxxflags="-std=c++17 ${CXXFLAGS}"
     - os: osx
       osx_image: xcode9.4
       env:
