@@ -106,11 +106,16 @@ namespace boost {
                 // Internal number to iterate
                 real const* _real_ptr = nullptr;
 
+                std::variant<boost::real::real_explicit::const_precision_iterator,
+                    boost::real::real_algorithm::const_precision_iterator> diff_it;
+
+/*                
                 // Explicit number iterator
                 boost::real::real_explicit::const_precision_iterator _explicit_it;
 
                 // Algorithmic number iterator
                 boost::real::real_algorithm::const_precision_iterator _algorithmic_it;
+*/
 
                 // If the number is a composition, the const_precision_iterator uses the operand iterators
                 const_precision_iterator* _lhs_it_ptr = nullptr;
@@ -306,15 +311,15 @@ namespace boost {
                     switch (this->_real_ptr->_kind) {
 
                         case KIND::EXPLICIT:
-                                this->_explicit_it = std::get<real_explicit>(
+                                this->diff_it = std::get<real_explicit>(
                                         this->_real_ptr->diff_number).cbegin();
-                            this->approximation_interval = this->_explicit_it.approximation_interval;
+                            this->approximation_interval = std::get<0>(this -> diff_it).approximation_interval;
                             break;
 
                         case KIND::ALGORITHM:
-                            this->_algorithmic_it = std::get<real_algorithm>
+                            this->diff_it = std::get<real_algorithm>
                                 (this->_real_ptr->diff_number).cbegin();
-                            this->approximation_interval = this->_algorithmic_it.approximation_interval;
+                            this->approximation_interval = std::get<1>(this->diff_it).approximation_interval;
                             break;
 
                         case KIND::OPERATION:
@@ -344,25 +349,25 @@ namespace boost {
 
                         case KIND::EXPLICIT:
                             if (cend) {
-                                this->_explicit_it = std::get<real_explicit>
+                                this->diff_it = std::get<real_explicit>
                                     (this->_real_ptr->diff_number).cend();
                             } else {
-                                this->_explicit_it = 
+                                this->diff_it= 
                                     std::get<real_explicit>
                                     (this->_real_ptr->diff_number).cbegin();
                             }
-                            this->approximation_interval = this->_explicit_it.approximation_interval;
+                            this->approximation_interval = std::get<0>(this->diff_it).approximation_interval;
                             break;
 
                         case KIND::ALGORITHM:
                             if (cend) {
-                                this->_algorithmic_it = std::get<real_algorithm>(
+                                this->diff_it = std::get<real_algorithm>(
                                         this->_real_ptr->diff_number).cend();
                             } else {
-                                this->_algorithmic_it = std::get<real_algorithm>
+                                this->diff_it = std::get<real_algorithm>
                                     (this->_real_ptr->diff_number).cbegin();
                             }
-                            this->approximation_interval = this->_algorithmic_it.approximation_interval;
+                            this->approximation_interval = std::get<1>(this->diff_it).approximation_interval;
                             break;
 
                         case KIND::OPERATION:
@@ -382,13 +387,13 @@ namespace boost {
                     switch (this->_real_ptr->_kind) {
 
                         case KIND::EXPLICIT:
-                            ++this->_explicit_it;
-                            this->approximation_interval = this->_explicit_it.approximation_interval;
+                            ++(std::get<0>(this->diff_it));
+                            this->approximation_interval = std::get<0>(this->diff_it).approximation_interval;
                             break;
 
                         case KIND::ALGORITHM:
-                            ++this->_algorithmic_it;
-                            this->approximation_interval = this->_algorithmic_it.approximation_interval;
+                            ++(std::get<1>(this->diff_it));
+                            this->approximation_interval = std::get<1>(this->diff_it).approximation_interval;
                             break;
 
                         case KIND::OPERATION:
