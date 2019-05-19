@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <initializer_list>
 #include <utility>
+#include <variant>
 
 #include <real/real_exception.hpp>
 #include <real/real_helpers.hpp>
@@ -59,12 +60,14 @@ namespace boost {
 
             KIND _kind;
 
+            std::variant<real_explicit, real_algorithm> diff_number;
+/*
             // Explicit number
             real_explicit _explicit_number;
 
             // Algorithmic number
             real_algorithm _algorithmic_number;
-
+*/
             // Composed number
             OPERATION _operation;
             real* _lhs_ptr = nullptr;
@@ -303,12 +306,14 @@ namespace boost {
                     switch (this->_real_ptr->_kind) {
 
                         case KIND::EXPLICIT:
-                                this->_explicit_it = this->_real_ptr->_explicit_number.cbegin();
+                                this->_explicit_it = std::get<real_explicit>(
+                                        this->_real_ptr->diff_number).cbegin();
                             this->approximation_interval = this->_explicit_it.approximation_interval;
                             break;
 
                         case KIND::ALGORITHM:
-                            this->_algorithmic_it = this->_real_ptr->_algorithmic_number.cbegin();
+                            this->_algorithmic_it = std::get<real_algorithm>
+                                (this->_real_ptr->diff_number).cbegin();
                             this->approximation_interval = this->_algorithmic_it.approximation_interval;
                             break;
 
@@ -339,18 +344,23 @@ namespace boost {
 
                         case KIND::EXPLICIT:
                             if (cend) {
-                                this->_explicit_it = this->_real_ptr->_explicit_number.cend();
+                                this->_explicit_it = std::get<real_explicit>
+                                    (this->_real_ptr->diff_number).cend();
                             } else {
-                                this->_explicit_it = this->_real_ptr->_explicit_number.cbegin();
+                                this->_explicit_it = 
+                                    std::get<real_explicit>
+                                    (this->_real_ptr->diff_number).cbegin();
                             }
                             this->approximation_interval = this->_explicit_it.approximation_interval;
                             break;
 
                         case KIND::ALGORITHM:
                             if (cend) {
-                                this->_algorithmic_it = this->_real_ptr->_algorithmic_number.cend();
+                                this->_algorithmic_it = std::get<real_algorithm>(
+                                        this->_real_ptr->diff_number).cend();
                             } else {
-                                this->_algorithmic_it = this->_real_ptr->_algorithmic_number.cbegin();
+                                this->_algorithmic_it = std::get<real_algorithm>
+                                    (this->_real_ptr->diff_number).cbegin();
                             }
                             this->approximation_interval = this->_algorithmic_it.approximation_interval;
                             break;
@@ -440,8 +450,7 @@ namespace boost {
              */
             real(const real& other)  :
                     _kind(other._kind),
-                    _explicit_number(other._explicit_number),
-                    _algorithmic_number(other._algorithmic_number),
+                    diff_number(other.diff_number),
                     _operation(other._operation) { this->copy_operands(other); };
 
             /**
@@ -454,7 +463,7 @@ namespace boost {
              * @throws boost::real::invalid_string_number exception
              */
             real(const std::string& number)
-                    : _kind(KIND::EXPLICIT), _explicit_number(number) {}
+                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, number) {}
 
             /**
              * @brief *Initializer list constructor:* Creates a boost::real::real_explicit instance
@@ -464,7 +473,7 @@ namespace boost {
              * @param digits - a initializer_list<int> that represents the number digits.
              */
             real(std::initializer_list<int> digits)
-                    : _kind(KIND::EXPLICIT), _explicit_number(digits, digits.size()) {}
+                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, digits, digits.size()) {}
 
 
             /**
@@ -478,7 +487,7 @@ namespace boost {
              * the number is positive, otherwise is negative.
              */
             real(std::initializer_list<int> digits, bool positive)
-                    : _kind(KIND::EXPLICIT), _explicit_number(digits, digits.size(), positive) {}
+                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, digits, digits.size(), positive) {}
 
             /**
              * @brief *Initializer list constructor with exponent:* Creates a boost::real::real
@@ -490,7 +499,7 @@ namespace boost {
              * @param exponent - an integer representing the number exponent.
              */
             real(std::initializer_list<int> digits, int exponent)
-                    : _kind(KIND::EXPLICIT), _explicit_number(digits, exponent) {};
+                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, digits, exponent) {};
 
             /**
              * @brief *Initializer list constructor with exponent and sign:* Creates a boost::real::real instance
@@ -504,7 +513,7 @@ namespace boost {
              * the number is positive, otherwise is negative.
              */
             real(std::initializer_list<int> digits, int exponent, bool positive)
-                    : _kind(KIND::EXPLICIT), _explicit_number(digits, exponent, positive) {};
+                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, digits, exponent, positive) {};
 
             /**
              * @brief *Lambda function constructor with exponent:* Creates a boost::real::real
@@ -517,7 +526,7 @@ namespace boost {
              * @param exponent - an integer representing the number exponent.
              */
             real(int (*get_nth_digit)(unsigned int), int exponent)
-                    : _kind(KIND::ALGORITHM), _algorithmic_number(get_nth_digit, exponent) {}
+                    : _kind(KIND::ALGORITHM), diff_number(std::in_place_type<real_algorithm>, get_nth_digit, exponent) {}
 
             /**
              * @brief *Lambda function constructor with exponent and sign:* Creates a boost::real::real instance
@@ -536,7 +545,7 @@ namespace boost {
                  int exponent,
                  bool positive)
                     : _kind(KIND::ALGORITHM),
-                      _algorithmic_number(get_nth_digit, exponent, positive) {}
+                      diff_number(std::in_place_type<real_algorithm>, get_nth_digit, exponent, positive) {}
 
             /**
              * @brief *Default destructor:* If the number is an operator, the destructor destroys its operands.
@@ -616,11 +625,11 @@ namespace boost {
                 switch (this->_kind) {
 
                     case KIND::EXPLICIT:
-                        result = this->_explicit_number[n];
+                        result = std::get<real_explicit>(this -> diff_number)[n];
                         break;
 
                     case KIND::ALGORITHM:
-                        result = this->_algorithmic_number[n];
+                        result = std::get<real_algorithm>(this->diff_number)[n];
                         break;
 
                     case KIND::OPERATION:
@@ -729,7 +738,7 @@ namespace boost {
              */
             real& operator=(const real& other) {
                 this->_kind = other._kind;
-                this->_explicit_number = other._explicit_number;
+                this->diff_number = other.diff_number;
                 this->_operation = other._operation;
                 this->copy_operands(other);
                 return *this;
