@@ -60,14 +60,9 @@ namespace boost {
 
             KIND _kind;
 
-            std::variant<real_explicit, real_algorithm> diff_number;
-/*
-            // Explicit number
-            real_explicit _explicit_number;
+            std::variant<boost::real::real_explicit, boost::real::real_algorithm> _explicit_algorithm_number;
+            //Stores both explicit and algorithmic numbers
 
-            // Algorithmic number
-            real_algorithm _algorithmic_number;
-*/
             // Composed number
             OPERATION _operation;
             real* _lhs_ptr = nullptr;
@@ -107,15 +102,9 @@ namespace boost {
                 real const* _real_ptr = nullptr;
 
                 std::variant<boost::real::real_explicit::const_precision_iterator,
-                    boost::real::real_algorithm::const_precision_iterator> diff_it;
+                    boost::real::real_algorithm::const_precision_iterator> _explicit_algorithm_it;
+                //Stores both explicit and algorithmic iterators
 
-/*                
-                // Explicit number iterator
-                boost::real::real_explicit::const_precision_iterator _explicit_it;
-
-                // Algorithmic number iterator
-                boost::real::real_algorithm::const_precision_iterator _algorithmic_it;
-*/
 
                 // If the number is a composition, the const_precision_iterator uses the operand iterators
                 const_precision_iterator* _lhs_it_ptr = nullptr;
@@ -311,15 +300,17 @@ namespace boost {
                     switch (this->_real_ptr->_kind) {
 
                         case KIND::EXPLICIT:
-                                this->diff_it = std::get<real_explicit>(
-                                        this->_real_ptr->diff_number).cbegin();
-                            this->approximation_interval = std::get<0>(this -> diff_it).approximation_interval;
+                                this->_explicit_algorithm_it = std::get<boost::real::real_explicit>(
+                                        this->_real_ptr->_explicit_algorithm_number).cbegin();
+                            this->approximation_interval = std::get<boost::real::real_explicit::const_precision_iterator>
+(this -> _explicit_algorithm_it).approximation_interval;
                             break;
 
                         case KIND::ALGORITHM:
-                            this->diff_it = std::get<real_algorithm>
-                                (this->_real_ptr->diff_number).cbegin();
-                            this->approximation_interval = std::get<1>(this->diff_it).approximation_interval;
+                            this->_explicit_algorithm_it = std::get<boost::real::real_algorithm>
+                                (this->_real_ptr->_explicit_algorithm_number).cbegin();
+                            this->approximation_interval = std::get<boost::real::real_algorithm::const_precision_iterator>
+(this->_explicit_algorithm_it).approximation_interval;
                             break;
 
                         case KIND::OPERATION:
@@ -349,25 +340,27 @@ namespace boost {
 
                         case KIND::EXPLICIT:
                             if (cend) {
-                                this->diff_it = std::get<real_explicit>
-                                    (this->_real_ptr->diff_number).cend();
+                                this->_explicit_algorithm_it = std::get<boost::real::real_explicit>
+                                    (this->_real_ptr->_explicit_algorithm_number).cend();
                             } else {
-                                this->diff_it= 
-                                    std::get<real_explicit>
-                                    (this->_real_ptr->diff_number).cbegin();
+                                this->_explicit_algorithm_it= 
+                                    std::get<boost::real::real_explicit>
+                                    (this->_real_ptr->_explicit_algorithm_number).cbegin();
                             }
-                            this->approximation_interval = std::get<0>(this->diff_it).approximation_interval;
+                            this->approximation_interval = std::get<boost::real::real_explicit::const_precision_iterator>
+(this->_explicit_algorithm_it).approximation_interval;
                             break;
 
                         case KIND::ALGORITHM:
                             if (cend) {
-                                this->diff_it = std::get<real_algorithm>(
-                                        this->_real_ptr->diff_number).cend();
+                                this->_explicit_algorithm_it = std::get<boost::real::real_algorithm>(
+                                        this->_real_ptr->_explicit_algorithm_number).cend();
                             } else {
-                                this->diff_it = std::get<real_algorithm>
-                                    (this->_real_ptr->diff_number).cbegin();
+                                this->_explicit_algorithm_it = std::get<boost::real::real_algorithm>
+                                    (this->_real_ptr->_explicit_algorithm_number).cbegin();
                             }
-                            this->approximation_interval = std::get<1>(this->diff_it).approximation_interval;
+                            this->approximation_interval = std::get<boost::real::real_algorithm::const_precision_iterator>
+(this->_explicit_algorithm_it).approximation_interval;
                             break;
 
                         case KIND::OPERATION:
@@ -387,13 +380,17 @@ namespace boost {
                     switch (this->_real_ptr->_kind) {
 
                         case KIND::EXPLICIT:
-                            ++(std::get<0>(this->diff_it));
-                            this->approximation_interval = std::get<0>(this->diff_it).approximation_interval;
+                            ++(std::get<boost::real::real_explicit::const_precision_iterator>
+                                    (this->_explicit_algorithm_it));
+                            this->approximation_interval = std::get<boost::real::real_explicit::const_precision_iterator>
+                                (this->_explicit_algorithm_it).approximation_interval;
                             break;
 
                         case KIND::ALGORITHM:
-                            ++(std::get<1>(this->diff_it));
-                            this->approximation_interval = std::get<1>(this->diff_it).approximation_interval;
+                            ++(std::get<boost::real::real_algorithm::const_precision_iterator>
+                                    (this->_explicit_algorithm_it));
+                            this->approximation_interval = std::get<boost::real::real_algorithm::const_precision_iterator>
+                                (this->_explicit_algorithm_it).approximation_interval;
                             break;
 
                         case KIND::OPERATION:
@@ -455,7 +452,7 @@ namespace boost {
              */
             real(const real& other)  :
                     _kind(other._kind),
-                    diff_number(other.diff_number),
+                    _explicit_algorithm_number(other._explicit_algorithm_number),
                     _operation(other._operation) { this->copy_operands(other); };
 
             /**
@@ -468,7 +465,7 @@ namespace boost {
              * @throws boost::real::invalid_string_number exception
              */
             real(const std::string& number)
-                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, number) {}
+                    : _kind(KIND::EXPLICIT), _explicit_algorithm_number(std::in_place_type<boost::real::real_explicit>, number) {}
 
             /**
              * @brief *Initializer list constructor:* Creates a boost::real::real_explicit instance
@@ -478,7 +475,8 @@ namespace boost {
              * @param digits - a initializer_list<int> that represents the number digits.
              */
             real(std::initializer_list<int> digits)
-                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, digits, digits.size()) {}
+                    : _kind(KIND::EXPLICIT), _explicit_algorithm_number
+                      (std::in_place_type<boost::real::real_explicit>, digits, digits.size()) {}
 
 
             /**
@@ -492,7 +490,8 @@ namespace boost {
              * the number is positive, otherwise is negative.
              */
             real(std::initializer_list<int> digits, bool positive)
-                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, digits, digits.size(), positive) {}
+                    : _kind(KIND::EXPLICIT), _explicit_algorithm_number
+                      (std::in_place_type<boost::real::real_explicit>, digits, digits.size(), positive) {}
 
             /**
              * @brief *Initializer list constructor with exponent:* Creates a boost::real::real
@@ -504,7 +503,8 @@ namespace boost {
              * @param exponent - an integer representing the number exponent.
              */
             real(std::initializer_list<int> digits, int exponent)
-                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, digits, exponent) {};
+                    : _kind(KIND::EXPLICIT), _explicit_algorithm_number
+                      (std::in_place_type<boost::real::real_explicit>, digits, exponent) {};
 
             /**
              * @brief *Initializer list constructor with exponent and sign:* Creates a boost::real::real instance
@@ -518,7 +518,8 @@ namespace boost {
              * the number is positive, otherwise is negative.
              */
             real(std::initializer_list<int> digits, int exponent, bool positive)
-                    : _kind(KIND::EXPLICIT), diff_number(std::in_place_type<real_explicit>, digits, exponent, positive) {};
+                    : _kind(KIND::EXPLICIT), _explicit_algorithm_number
+                      (std::in_place_type<boost::real::real_explicit>, digits, exponent, positive) {};
 
             /**
              * @brief *Lambda function constructor with exponent:* Creates a boost::real::real
@@ -531,7 +532,8 @@ namespace boost {
              * @param exponent - an integer representing the number exponent.
              */
             real(int (*get_nth_digit)(unsigned int), int exponent)
-                    : _kind(KIND::ALGORITHM), diff_number(std::in_place_type<real_algorithm>, get_nth_digit, exponent) {}
+                    : _kind(KIND::ALGORITHM), _explicit_algorithm_number
+                      (std::in_place_type<boost::real::real_algorithm>, get_nth_digit, exponent) {}
 
             /**
              * @brief *Lambda function constructor with exponent and sign:* Creates a boost::real::real instance
@@ -550,7 +552,8 @@ namespace boost {
                  int exponent,
                  bool positive)
                     : _kind(KIND::ALGORITHM),
-                      diff_number(std::in_place_type<real_algorithm>, get_nth_digit, exponent, positive) {}
+                      _explicit_algorithm_number
+                      (std::in_place_type<boost::real::real_algorithm>, get_nth_digit, exponent, positive) {}
 
             /**
              * @brief *Default destructor:* If the number is an operator, the destructor destroys its operands.
@@ -630,11 +633,11 @@ namespace boost {
                 switch (this->_kind) {
 
                     case KIND::EXPLICIT:
-                        result = std::get<real_explicit>(this -> diff_number)[n];
+                        result = std::get<boost::real::real_explicit>(this -> _explicit_algorithm_number)[n];
                         break;
 
                     case KIND::ALGORITHM:
-                        result = std::get<real_algorithm>(this->diff_number)[n];
+                        result = std::get<boost::real::real_algorithm>(this->_explicit_algorithm_number)[n];
                         break;
 
                     case KIND::OPERATION:
@@ -743,7 +746,7 @@ namespace boost {
              */
             real& operator=(const real& other) {
                 this->_kind = other._kind;
-                this->diff_number = other.diff_number;
+                this->_explicit_algorithm_number = other._explicit_algorithm_number;
                 this->_operation = other._operation;
                 this->copy_operands(other);
                 return *this;

@@ -13,12 +13,12 @@ matrix:
   include:
     - os: linux
       dist: trusty
-      env: CC=gcc-7 CXX=g++-7 BOOST_ROOT=/usr/include/boost 
+      env: CC=gcc-8 CXX=g++-8 BOOST_ROOT=/usr/include/boost 
       compiler: gcc
       before_install:
           - sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
           - sudo apt-get update
-          - sudo apt-get install g++-7
+          - sudo apt-get install g++-8
           - export BOOST_URL="https://downloads.sourceforge.net/project/boost/boost/1.67.0/boost_1_67_0.tar.gz"
           - mkdir -p /tmp/boost
           - wget --quiet -O - ${BOOST_URL} | tar --strip-components=1 -xz -C /tmp/boost  || exit 1
